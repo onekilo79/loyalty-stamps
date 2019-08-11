@@ -25,13 +25,17 @@ class LoyaltyService(
         val acquiredStamps = acquiredStamps(applicableItems)
         val newStampCount = currentStampCount + acquiredStamps
 
+        accountRepo.recordReceipt(receipt)
         return if (newStampCount >= scheme.maxStamps) {
             val amountOfFreeItems = freeItemAcquired(newStampCount, scheme.maxStamps)
             val itemsByPrice = applicableItems.sortedBy { it.price }
             val redemptionStampsCount = calcRedementionOfStamps(newStampCount, scheme.maxStamps, amountOfFreeItems)
             val stampsGiven = acquiredStamps - amountOfFreeItems
+
+            val freeItems = itemsWhichAreFree(itemsByPrice, amountOfFreeItems)
             accountRepo.updateStampCountByScheme(account.id, scheme.id,redemptionStampsCount)
-            ApplyResponse(scheme.id, redemptionStampsCount, stampsGiven, itemsWhichAreFree(itemsByPrice, amountOfFreeItems).map { it.price })
+            accountRepo.addRedemption(account.id, scheme.id, freeItems)
+            ApplyResponse(scheme.id, redemptionStampsCount, stampsGiven, freeItems.map { it.price })
         } else {
             accountRepo.updateStampCountByScheme(account.id, scheme.id, newStampCount)
             ApplyResponse(scheme.id, newStampCount, acquiredStamps, listOf())
@@ -39,7 +43,9 @@ class LoyaltyService(
     }
 
     override fun state(accountId: AccountId): List<StateResponse> {
-        return accountRepo.findOrCreateAccount(accountId).schemeStamp.map { StateResponse(it.key, it.value, listOf() )}
+        val account = accountRepo.findOrCreateAccount(accountId)
+        return account.schemeStamp.keys
+                .map{ scheme -> StateResponse(scheme, account.schemeStamp[scheme]?: 0, (account.schemeRedemptionHistory[scheme]?: mutableListOf()).map { it.price } ) }
     }
 
     companion object {

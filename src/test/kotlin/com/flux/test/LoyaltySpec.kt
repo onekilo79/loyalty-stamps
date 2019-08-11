@@ -31,19 +31,19 @@ class LoyaltySpec : StringSpec() {
             response shouldBe 3
         }
         "CurrentStampCount should be zero for new account"{
-            val accountSchema = AccountSchema(accountId, mutableMapOf())
+            val accountSchema = AccountSchema(accountId, mutableMapOf(), mutableMapOf(), mutableListOf())
             val response = LoyaltyService.getCurrentStampCount(accountSchema, schemeId)
             response shouldBe 0
         }
         "CurrentStampCount should be 1"{
-            val accountSchema = AccountSchema(accountId, mutableMapOf(schemeId to 1))
+            val accountSchema = AccountSchema(accountId, mutableMapOf(schemeId to 1), mutableMapOf(), mutableListOf())
             val response = LoyaltyService.getCurrentStampCount(accountSchema, schemeId)
             response shouldBe 1
         }
         "ApplicableItems"{
             val receipt = Receipt(merchantId = merchantId, accountId = accountId, items = listOf(item1, Item("2", 100, 1)))
             val response = LoyaltyService.applicableItems(receipt, scheme)
-            
+
             response shouldHaveSize 1
             response shouldBe listOf(item1)
         }
@@ -61,7 +61,7 @@ class LoyaltySpec : StringSpec() {
 
         "Triggers a redemption once" {
             val receipt =
-                Receipt(merchantId = merchantId, accountId = accountId, items = 1.rangeTo(5).map { item1 })
+                    Receipt(merchantId = merchantId, accountId = accountId, items = 1.rangeTo(5).map { item1 })
             val response = implementation.apply(receipt)
 
             response shouldHaveSize (1)
@@ -73,7 +73,7 @@ class LoyaltySpec : StringSpec() {
 
         "Triggers a redemption twice" {
             val receipt =
-                Receipt(merchantId = merchantId, accountId = accountId, items = 1.rangeTo(10).map { item1 })
+                    Receipt(merchantId = merchantId, accountId = accountId, items = 1.rangeTo(10).map { item1 })
             val response = implementation.apply(receipt)
 
             response shouldHaveSize (1)
@@ -106,8 +106,8 @@ class LoyaltySpec : StringSpec() {
         private val scheme: Scheme = Scheme(schemeId, merchantId, 4, listOf("1"))
         private val schemes = listOf(scheme)
 
-        private val item1 :Item = Item("1", 100, 1)
-        
+        private val item1: Item = Item("1", 100, 1)
+
         private val listOfItems = listOf(Item("1", 200, 2), Item("2", 100, 1))
     }
 

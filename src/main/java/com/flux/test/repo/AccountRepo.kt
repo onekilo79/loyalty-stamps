@@ -11,12 +11,20 @@ class AccountRepo{
     }
 
     fun createAccount(accountId: AccountId): AccountSchema{
-        val newAccount = AccountSchema(accountId, mutableMapOf())
+        val newAccount = AccountSchema(accountId, mutableMapOf(), mutableMapOf(), mutableListOf())
         accountSchema.add(newAccount)
         return newAccount
     }
 
     fun updateStampCountByScheme(accountId: AccountId, schemeId: SchemeId, amount: Int){
         findOrCreateAccount(accountId).schemeStamp[schemeId] = amount
+    }
+
+    fun addRedemption(accountId: AccountId, schemeId: SchemeId, items: List<Item>){
+        findOrCreateAccount(accountId).schemeRedemptionHistory[schemeId]?.addAll(items)
+    }
+
+    fun recordReceipt(receipt: Receipt){
+        findOrCreateAccount(receipt.accountId).purchaseHistory.add(receipt)
     }
 }

@@ -9,9 +9,10 @@ data class Scheme(
         val skus: List<String>
 )
 
-
-//This modal would happy fit a nosql db and treat the below as a single collection
+//These should not really be mutable.
 data class AccountSchema(
         val id: AccountId,
-        val schemeStamp: MutableMap<SchemeId, Int>
+        val schemeStamp: MutableMap<SchemeId, Int>,
+        val schemeRedemptionHistory: MutableMap<SchemeId, MutableList<Item>>,
+        val purchaseHistory: MutableList<Receipt>
 )
