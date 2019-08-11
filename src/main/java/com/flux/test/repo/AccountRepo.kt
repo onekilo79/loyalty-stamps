@@ -2,6 +2,8 @@ package com.flux.test.repo
 
 import com.flux.test.model.*
 
+
+//Real world would also have tests for all the below
 class AccountRepo{
     private val accountSchema: MutableList<AccountSchema> = mutableListOf()
 
@@ -21,7 +23,13 @@ class AccountRepo{
     }
 
     fun addRedemption(accountId: AccountId, schemeId: SchemeId, items: List<Item>){
-        findOrCreateAccount(accountId).schemeRedemptionHistory[schemeId]?.addAll(items)
+        val redemptionHistory = findOrCreateAccount(accountId).schemeRedemptionHistory[schemeId]
+        if(redemptionHistory == null ) {
+            findOrCreateAccount(accountId).schemeRedemptionHistory[schemeId] = items.toMutableList()
+        }
+        else{
+            findOrCreateAccount(accountId).schemeRedemptionHistory[schemeId]?.addAll(items)
+        }
     }
 
     fun recordReceipt(receipt: Receipt){

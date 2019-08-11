@@ -6,6 +6,8 @@ import com.flux.test.repo.AccountRepo
 import com.flux.test.repo.SchemeRepo
 import kotlin.math.floor
 
+//In Java Spring world, normally i would be autowiring hte below.
+//Also the scheme would be within the schemeRepo
 class LoyaltyService(
         override var schemes: List<Scheme>,
         val accountRepo: AccountRepo,
@@ -18,21 +20,20 @@ class LoyaltyService(
 
     }
 
+    //It does feel this could be refactored as there is alot going on which will make this hard for others to follow
     private fun applyResponse(receipt: Receipt, scheme: Scheme): ApplyResponse {
         val applicableItems = applicableItems(receipt, scheme)
         val account = accountRepo.findOrCreateAccount(receipt.accountId)
-        val currentStampCount = getCurrentStampCount(account, scheme.id)
         val acquiredStamps = acquiredStamps(applicableItems)
-        val newStampCount = currentStampCount + acquiredStamps
+        val newStampCount = getCurrentStampCount(account, scheme.id) + acquiredStamps
 
         accountRepo.recordReceipt(receipt)
-        return if (newStampCount >= scheme.maxStamps) {
+        return if (newStampCount > scheme.maxStamps) {
             val amountOfFreeItems = freeItemAcquired(newStampCount, scheme.maxStamps)
-            val itemsByPrice = applicableItems.sortedBy { it.price }
             val redemptionStampsCount = calcRedementionOfStamps(newStampCount, scheme.maxStamps, amountOfFreeItems)
             val stampsGiven = acquiredStamps - amountOfFreeItems
 
-            val freeItems = itemsWhichAreFree(itemsByPrice, amountOfFreeItems)
+            val freeItems = itemsWhichAreFree(applicableItems, amountOfFreeItems)
             accountRepo.updateStampCountByScheme(account.id, scheme.id,redemptionStampsCount)
             accountRepo.addRedemption(account.id, scheme.id, freeItems)
             ApplyResponse(scheme.id, redemptionStampsCount, stampsGiven, freeItems.map { it.price })
@@ -50,7 +51,7 @@ class LoyaltyService(
 
     companion object {
 
-        fun itemsWhichAreFree(itemsByPrice: List<Item>, amountOfFreeItems: Int) = (itemsByPrice).subList(0, amountOfFreeItems)
+        fun itemsWhichAreFree(itemsByPrice: List<Item>, amountOfFreeItems: Int) = (itemsByPrice).sortedBy { it.price }.subList(0, amountOfFreeItems)
 
         fun calcRedementionOfStamps(newStampCount: Int, maxStamps: Int, amountOfFreeItems: Int) = (newStampCount % maxStamps) - amountOfFreeItems
 
